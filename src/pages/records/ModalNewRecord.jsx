@@ -8,8 +8,12 @@ import {
   updateRecord,
 } from "../../store/recods/recordsSlices";
 import { RiEdit2Line } from "react-icons/ri";
+import { RequestPassword } from "../../components/RequestPassword";
+import { useState } from "react";
 
 export const ModalNewRecord = ({ Modal }) => {
+  const [info, setInfo] = useState({});
+  const [activeRequestPassword, setActiveRequestPassword] = useState(false);
   const { recordModal } = useSelector((state) => state.records);
   const dispatch = useDispatch();
 
@@ -21,12 +25,12 @@ export const ModalNewRecord = ({ Modal }) => {
   } = useForm({
     defaultValues: {
       name: recordModal?.art_nombre,
-      // unit: '',
-      // weight: '',
-      // um: '',
-      // price: recordModal?.art_precio,
-      // commission: recordModal?.art_comision,
-      // currency: recordModal?.art_divisa,
+      unit: recordModal?.art_unidad,
+      status: recordModal?.art_status,
+      um: recordModal?.art_um,
+      price: recordModal?.art_precio,
+      commission: recordModal?.art_comision,
+      currency: recordModal?.art_divisa,
     },
   });
 
@@ -37,17 +41,16 @@ export const ModalNewRecord = ({ Modal }) => {
   };
 
   // agregar nuevo registro
-  // endpoint= http://localhost:4000/api/clients, POST
   const addRecord = async (data) => {
-    const { commission, currency, name, pcw, price, um, unit, weight } = data;
+    const { commission, currency, name, price, um, unit, status } = data;
     const infoInsert = {
       art_nombre: name,
       art_um: parseFloat(um).toFixed(2),
       art_precio: parseFloat(price).toFixed(2),
-      art_peso: parseFloat(weight).toFixed(2),
-      art_unidad: unit,
+      art_status: status.toUpperCase(),
+      art_unidad: unit.toUpperCase(),
       art_comision: parseFloat(commission).toFixed(2),
-      art_divisa: currency,
+      art_divisa: currency.toUpperCase(),
     };
     const res = await getData(
       "POST",
@@ -66,42 +69,63 @@ export const ModalNewRecord = ({ Modal }) => {
     }
   };
 
-  // editar registro
-  // endpoint= http://localhost:4000/api/clients, PUT
-  const editRecord = async (data) => {
-    const { commission, currency, name, price, um, unit, weight } = data;
-    const infoUpdate = {
+  const updateRecordDB = async (data) => {
+    const dataUpdate = {
+      art_nombre: data.name,
+      art_um: data.um,
+      art_precio: data.price,
+      art_unidad: data.unit,
+      art_status: data.status,
+      art_comision: data.commission,
+      art_divisa: data.currency,
       art_codigo: recordModal.art_codigo,
-      art_nombre: name,
-      art_um: parseFloat(um).toFixed(2),
-      art_precio: parseFloat(price).toFixed(2),
-      art_peso: parseFloat(weight).toFixed(2),
-      art_unidad: unit,
-      art_comision: parseFloat(commission).toFixed(2),
-      art_divisa: currency,
     };
-    const res = await getData(
-      "PUT",
-      "http://localhost:4000/api/clients",
-      infoUpdate
-    );
+    try {
+      const res = await getData(
+        "PUT",
+        "http://localhost:4000/api/clients",
+        dataUpdate
+      );
 
-    if (!res.error) {
-      toast.success("Actualizado correctamente!");
-      dispatch(updateRecord({ art_codigo: recordModal.art_codigo, newRecords: data }));
-      closeModal();
-    } else {
+      if (!res.error) {
+        toast.success("Actualizado correctamente!");
+        dispatch(updateRecord({ ...data, art_codigo: recordModal.art_codigo }));
+        closeModal();
+        return;
+      }
+
       toast.error("Error al actualizar el registro!");
+    } catch (error) {
+      console.log(error);
+      toast.error("Ocurrio un error");
     }
   };
 
   // lo que ejecutara cuando este completo el formulario
   const onSubmit = async (data) => {
-    Object.keys(recordModal).length > 0 ? editRecord(data) : addRecord(data);
+    if (Object.keys(recordModal).length <= 0) {
+      addRecord(data);
+      return;
+    } else {
+      updateRecordDB(data);
+    }
+    setInfo(data);
+    setActiveRequestPassword(true);
+  };
+
+  const clodeRequestPassword = () => {
+    setActiveRequestPassword(false);
   };
 
   return (
     <>
+      {activeRequestPassword && (
+        <RequestPassword
+          closeModal={closeModal}
+          data={info}
+          clodeRequestPassword={clodeRequestPassword}
+        />
+      )}
       <div className="fixed z-20 inset-0 overflow-hidden">
         <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
           <div
@@ -114,7 +138,7 @@ export const ModalNewRecord = ({ Modal }) => {
           >
             &#8203;
           </span>
-          <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full animate__animated animate__backInUp">
+          <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full animate_animated animate_backInUp">
             <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
               <div className="sm:flex sm:items-start relative">
                 {/* mostrar el codigo del producto a editar */}
@@ -148,7 +172,11 @@ export const ModalNewRecord = ({ Modal }) => {
                     className="text-lg leading-6 font-medium text-gray-900 py-1 text-center"
                     id="modal-title"
                   >
-                    Registrar nuevo producto
+                    {`${
+                      Object.keys(recordModal).length > 0
+                        ? "Actualizar producto"
+                        : "Registrar nuevo producto"
+                    }`}
                   </h3>
                   <div className="mt-10">
                     <form onSubmit={handleSubmit(onSubmit)}>
@@ -163,6 +191,36 @@ export const ModalNewRecord = ({ Modal }) => {
                             {...register("name", { required: true })}
                             className={`p-1 pl-3 border border-gray-300 mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm rounded-md ${
                               errors.name &&
+                              "border-red-300 mt-1 outline-red-500"
+                            }`}
+                          />
+                        </div>
+
+                        <div className="col-span-6 sm:col-span-3">
+                          <label className="block text-sm font-medium text-gray-700">
+                            UM
+                          </label>
+                          <input
+                            type="number"
+                            name="um"
+                            {...register("um", { required: true })}
+                            className={`p-1 pl-3 border border-gray-300 mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm rounded-md ${
+                              errors.um && "border-red-300 mt-1 outline-red-500"
+                            }`}
+                          />
+                        </div>
+
+                        <div className="col-span-6 sm:col-span-3">
+                          <label className="block text-sm font-medium text-gray-700">
+                            Precio
+                          </label>
+                          <input
+                            type="number"
+                            name="price"
+                            step={0.1}
+                            {...register("price", { required: true })}
+                            className={`p-1 pl-3 mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border border-gray-300 rounded-md ${
+                              errors.price &&
                               "border-red-300 mt-1 outline-red-500"
                             }`}
                           />
@@ -186,75 +244,28 @@ export const ModalNewRecord = ({ Modal }) => {
 
                         <div className="col-span-6 sm:col-span-3">
                           <label className="block text-sm font-medium text-gray-700">
-                            Peso
+                            Status
                           </label>
                           <input
-                            type="number"
-                            name="weight"
-                            step={0.1}
-                            {...register("weight", { required: true })}
-                            placeholder="0.00"
+                            type="text"
+                            name="status"
+                            {...register("status")}
                             className={`p-1 pl-3 border border-gray-300 mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm rounded-md ${
                               errors.weight &&
                               "border-red-300 mt-1 outline-red-500"
                             }`}
                           />
                         </div>
-
-                        <div className="col-span-6 sm:col-span-3">
-                          <label className="block text-sm font-medium text-gray-700">
-                            Cantidad
-                          </label>
-                          <input
-                            type="number"
-                            name="um"
-                            {...register("um", { required: true })}
-                            className={`p-1 pl-3 border border-gray-300 mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm rounded-md ${
-                              errors.um && "border-red-300 mt-1 outline-red-500"
-                            }`}
-                          />
-                        </div>
-
-                        <div className="col-span-6 sm:col-span-3">
-                          <label className="block text-sm font-medium text-gray-700">
-                            Peso por pieza
-                          </label>
-                          <input
-                            type="number"
-                            name="pcw"
-                            step={0.1}
-                            {...register("pcw", { required: true })}
-                            className={`p-1 pl-3 mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border border-gray-300 rounded-md ${
-                              errors.pcw &&
-                              "border-red-300 mt-1 outline-red-500"
-                            }`}
-                          />
-                        </div>
-
-                        <div className="col-span-6 sm:col-span-3">
-                          <label className="block text-sm font-medium text-gray-700">
-                            Precio
-                          </label>
-                          <input
-                            type="number"
-                            name="price"
-                            step={0.1}
-                            {...register("price", { required: true })}
-                            className={`p-1 pl-3 mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border border-gray-300 rounded-md ${
-                              errors.price &&
-                              "border-red-300 mt-1 outline-red-500"
-                            }`}
-                          />
-                        </div>
-
                         <div className="col-span-6 sm:col-span-3">
                           <label className="block text-sm font-medium text-gray-700">
                             comisión
                           </label>
                           <input
+                            defaultValue={0.25}
                             type="number"
                             name="commission"
                             step={0.1}
+                            min={0}
                             {...register("commission", { required: true })}
                             className={`p-1 pl-3 mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border border-gray-300 rounded-md ${
                               errors.commission &&
@@ -263,7 +274,7 @@ export const ModalNewRecord = ({ Modal }) => {
                           />
                         </div>
 
-                        <div className="col-span-6">
+                        <div className="col-span-6 sm:col-span-3">
                           <label className="block text-sm font-medium text-gray-700">
                             Divisa
                           </label>
@@ -291,7 +302,9 @@ export const ModalNewRecord = ({ Modal }) => {
                   className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm"
                 >
                   {`${
-                    Object.keys(recordModal).length > 0 ? "Update" : "Guardar"
+                    Object.keys(recordModal).length > 0
+                      ? "Actualizar"
+                      : "Guardar"
                   }`}
                 </button>
                 <button

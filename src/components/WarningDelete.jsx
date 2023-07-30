@@ -35,7 +35,7 @@ export const WarningDelete = () => {
   return (
     <div className="w-screen bg-warning fixed z-30 flex items-center justify-center h-screen ">
       <div
-        className="w-min() ml-auto mr-auto flex flex-col gap-9 bg-yellow-200 border-l-4 border-yellow-400 text-yellow-700 p-4"
+        className="w-min() ml-auto mr-auto flex flex-col gap-9 bg-red-50 border-l-4 text-gray-500 p-4 rounded-sm"
         role="alert"
       >
         <p className="font-bold text-base">

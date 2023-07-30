@@ -13,6 +13,7 @@ export default {
       backgroundColor: {
         Nav: "#2C3E50",
         warning: "rgb(0,0,0, .5)",
+        lilaClaro: ' #b695c0'
       },
       width: {
         "min()": "min(90%, 500px)",

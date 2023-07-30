@@ -8,7 +8,7 @@ export const NavBar = () => {
   const location = useLocation();
 
   return (
-    <header className="flex p-2 bg-Nav items-center w-full">
+    <header className="flex p-2 bg-blue-600 items-center w-full text-white">
       <div className="w-7">
         <img
           src="http://201.151.250.100/Server94/Plosa/Catalogos/assets/Plosa.png"

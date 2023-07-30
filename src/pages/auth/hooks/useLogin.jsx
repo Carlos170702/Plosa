@@ -11,6 +11,7 @@ export const useLogin = () => {
     password: "",
     active: false,
   });
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { user: dataUser } = useSelector((state) => state.records);
@@ -26,7 +27,7 @@ export const useLogin = () => {
       const dataUser = JSON.parse(localStorage.getItem("user"));
       Setuser({
         user: dataUser,
-        password: '',
+        password: "",
         active: true,
       });
     }
@@ -34,23 +35,30 @@ export const useLogin = () => {
 
   // vaidar si existe o no
   const login = async (userName, password) => {
+    setLoading(true);
     try {
       const res = await getData(
         "GET",
         `http://localhost:4000/api/clients/${userName}`
+        // "http://localhost:4000/api/clients/MASTER"
       );
+
       if (!res.error && res?.message[0].usu_password === password) {
-        navigate("./Registros", { replace: false });
+        navigate("./Registros", { replace: true });
         dispatch(addUser(res.message[0]));
 
         user.active
           ? localStorage.setItem("user", JSON.stringify(userName))
           : localStorage.clear();
+        setLoading(false);
       } else {
         toast.error("Usuario o Contraseña incorrectos");
+        setLoading(false);
       }
     } catch (error) {
+      console.log(error.message);
       toast.error("Usuario o Contraseña incorrectos");
+      setLoading(false);
     }
   };
 
@@ -79,6 +87,7 @@ export const useLogin = () => {
   return {
     // *properties
     user,
+    loading,
     // *methods
     onSubmit,
     handleUser,

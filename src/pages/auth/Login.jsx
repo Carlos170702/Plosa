@@ -1,16 +1,26 @@
+import { Loader } from "../../components/Loader";
 import { NavBar } from "../../components/NavBar";
 import { useLogin } from "./hooks/useLogin";
 
 export const Login = () => {
-  const { user, onSubmit, handleUser, handleActive } = useLogin();
+  const { user, loading, onSubmit, handleUser, handleActive } = useLogin();
 
   return (
     <div className="flex flex-col h-screen">
       <NavBar />
+
+      {/* muestra carga de el login */}
+      {loading && (
+        <div className="w-screen h-screen bg-warning fixed z-10 flex justify-center items-center flex-col">
+          <p className="text-white font-bold mb-2 tracking-wider">Espere</p>
+          <Loader />
+        </div>
+      )}
+
       <div className="min-h-screen bg-gray-100 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
         <div className="sm:mx-auto sm:w-full sm:max-w-md">
           <h2 className="text-center text-3xl font-extrabold text-gray-900">
-            ¡Bienvenido de vuelta!
+            Bienvenido a Comercializadora Ochoa
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
             Inicia sesión en tu cuenta para continuar.

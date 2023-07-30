@@ -34,17 +34,15 @@ export const records = createSlice({
       state.recordToDelete = action.payload;
     },
     updateRecord: (state, { payload }) => {
-      const { art_codigo, newRecords } = payload;
       const dataUpdate = {
-        art_codigo,
-        art_nombre: newRecords.name,
-        art_um: newRecords.um,
-        art_precio: newRecords.price,
-        art_peso: newRecords.weight,
-        art_unidad: newRecords.unit,
-        art_comision: newRecords.commission,
-        art_divisa: newRecords.currency,
-        art_status: "u",
+        art_nombre: payload.name,
+        art_um: payload.um,
+        art_precio: payload.price,
+        art_unidad: payload.unit,
+        art_status: payload.status,
+        art_comision: payload.commission,
+        art_divisa: payload.currency,
+        art_codigo: payload.art_codigo,
       };
       state.records = state.records.map((record) => {
         if (record.art_codigo === payload.art_codigo) {
@@ -54,6 +52,7 @@ export const records = createSlice({
         }
       });
     },
+
     deleteRecord: (state, { payload }) => {
       const data = {
         art_codigo: payload.art_codigo,
